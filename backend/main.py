@@ -36,7 +36,12 @@ def create_user(user: UserCreate):
         session.refresh(new_user)
         return {"id": new_user.id, "auth_id": new_user.auth_id, "name": new_user.name, "username": new_user.username, "birthday": new_user.birthday, "email": new_user.email, "acc_created_date": new_user.acc_created_date, "color": new_user.color}
 
-try:
-    create_user(UserCreate(name="Test", email="test@example.com", username="testuser"))
-except IntegrityError:
-    raise HTTPException(status_code=400, detail="User already exists")
+@app.get("/users/{user_id}")
+def read_user(user_id: int):
+    with SessionLocal() as session:
+        result = session.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"id": user.id, "auth_id": user.auth_id, "name": user.name, "username": user.username, "birthday": user.birthday, "email": user.email, "acc_created_date": user.acc_created_date, "color": user.color}
+
